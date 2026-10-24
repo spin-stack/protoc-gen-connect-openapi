@@ -66,6 +66,8 @@ func loadTestFileDescriptorSet(t *testing.T) *descriptorpb.FileDescriptorSet {
 var scenarios = []Scenario{
 	{Name: "standard", Options: "allow-get,with-streaming,with-service-descriptions"},
 	{Name: "proto_names", Options: "with-proto-names"},
+	{Name: "with_enum_value_descriptions", Options: "with-enum-value-descriptions"},
+	{Name: "with_enum_value_descriptions_numbers", Options: "with-enum-value-descriptions,include-number-enum-values"},
 	{Name: "path_prefix", Options: "path-prefix=/testing/1234"},
 	{Name: "with_proto_annotations", Options: "with-proto-annotations"},
 	{Name: "well_known_type_descriptions_omit", Options: "well-known-type-descriptions=omit"},

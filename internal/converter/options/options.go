@@ -74,6 +74,9 @@ type Options struct {
 	Debug bool
 	// IncludeNumberEnumValues indicates if numbers are included for enum values in addition to the string representations.
 	IncludeNumberEnumValues bool
+	// WithEnumValueDescriptions documents each enum value with its own comment: as an
+	// x-enum-descriptions list beside the enum's values, and as a list in the enum's description.
+	WithEnumValueDescriptions bool
 	// WithProtoNames indicates if protobuf field names should be used instead of JSON names.
 	WithProtoNames bool
 	// Path is the output OpenAPI path.
@@ -204,6 +207,8 @@ func FromString(s string) (Options, error) {
 			opts.Debug = true
 		case param == "include-number-enum-values":
 			opts.IncludeNumberEnumValues = true
+		case param == "with-enum-value-descriptions":
+			opts.WithEnumValueDescriptions = true
 		case param == "allow-get":
 			opts.AllowGET = true
 		case param == "with-streaming":

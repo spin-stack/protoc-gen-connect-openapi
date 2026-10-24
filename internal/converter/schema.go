@@ -1,11 +1,14 @@
 package converter
 
 import (
+	"fmt"
 	"log/slog"
 	"strconv"
+	"strings"
 
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	"github.com/pb33f/libopenapi/orderedmap"
 	"github.com/pb33f/libopenapi/utils"
 	"go.yaml.in/yaml/v4"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -87,6 +90,11 @@ func AddEnumToSchema(opts options.Options, ed protoreflect.EnumDescriptor, doc *
 func enumToSchema(opts options.Options, tt protoreflect.EnumDescriptor) (string, *base.Schema) {
 	opts.Logger.Debug("enumToSchema", slog.Any("descriptor", tt.FullName()))
 	children := []*yaml.Node{}
+	// One description for each entry of the enum, in its order: a value's number, when it is
+	// included, is described as its name is.
+	descriptions := []*yaml.Node{}
+	var listed strings.Builder
+	locations := tt.ParentFile().SourceLocations()
 	values := tt.Values()
 	for i := 0; i < values.Len(); i++ {
 		value := values.Get(i)
@@ -94,9 +102,21 @@ func enumToSchema(opts options.Options, tt protoreflect.EnumDescriptor) (string,
 			opts.Logger.Debug("Filtering enum value due to visibility", slog.String("enum_value", string(value.FullName())), slog.Any("restriction_selectors", opts.AllowedVisibilities))
 			continue // Skip this enum value
 		}
+		comment := util.FormatComments(locations.ByDescriptor(value))
 		children = append(children, utils.CreateStringNode(string(value.Name())))
+		descriptions = append(descriptions, utils.CreateStringNode(comment))
 		if opts.IncludeNumberEnumValues {
 			children = append(children, utils.CreateIntNode(strconv.FormatInt(int64(value.Number()), 10)))
+			descriptions = append(descriptions, utils.CreateStringNode(comment))
+		}
+		if comment != "" {
+			// A comment of several lines stays inside its list item: each line after the first is
+			// indented under it, or Markdown would end the list there.
+			lines := strings.Split(comment, "\n")
+			for j := 1; j < len(lines); j++ {
+				lines[j] = strings.TrimRight("  "+strings.TrimSpace(lines[j]), " ")
+			}
+			fmt.Fprintf(&listed, "\n- `%s`: %s", value.Name(), strings.Join(lines, "\n"))
 		}
 	}
 
@@ -110,9 +130,16 @@ func enumToSchema(opts options.Options, tt protoreflect.EnumDescriptor) (string,
 	}
 	s := &base.Schema{
 		Title:       title,
-		Description: util.FormatComments(tt.ParentFile().SourceLocations().ByDescriptor(tt)),
+		Description: util.FormatComments(locations.ByDescriptor(tt)),
 		Type:        types,
 		Enum:        children,
+	}
+	if opts.WithEnumValueDescriptions && listed.Len() > 0 {
+		// The list, for a reader of the description in any tool; the extension, for a tool
+		// that pairs each value with its own text (openapi-generator's x-enum-descriptions).
+		s.Description = strings.TrimSpace(s.Description + "\n" + listed.String())
+		s.Extensions = orderedmap.New[string, *yaml.Node]()
+		s.Extensions.Set("x-enum-descriptions", &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq", Content: descriptions})
 	}
 	return string(tt.FullName()), s
 }

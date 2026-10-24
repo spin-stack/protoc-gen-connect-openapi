@@ -15,6 +15,7 @@ func TestFromString(t *testing.T) {
 		optionList := []string{
 			"debug",
 			"include-number-enum-values",
+			"with-enum-value-descriptions",
 			"allow-get",
 			"with-streaming",
 			"with-proto-names",
@@ -33,6 +34,7 @@ func TestFromString(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, opts.Debug)
 		assert.True(t, opts.IncludeNumberEnumValues)
+		assert.True(t, opts.WithEnumValueDescriptions)
 		assert.True(t, opts.AllowGET)
 		assert.True(t, opts.WithStreaming)
 		assert.True(t, opts.WithProtoNames)

@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package with_enum_value_descriptions_numbers.v1;
+
+// The state a door is in.
+enum DoorState {
+  DOOR_STATE_UNSPECIFIED = 0;
+  // Shut, and anyone may open it.
+  DOOR_STATE_CLOSED = 1;
+  DOOR_STATE_OPEN = 2; // Open: what passes through is not checked.
+  // Shut, and only a key opens it.
+  //
+  // A locked door stays locked across a restart.
+  DOOR_STATE_LOCKED = 3;
+}
+
+// An enum none of whose values says anything.
+enum Plain {
+  PLAIN_UNSPECIFIED = 0;
+  PLAIN_ONE = 1;
+}
+
+message Door {
+  string name = 1;
+  DoorState state = 2;
+  Plain plain = 3;
+}
+
+message GetDoorRequest {
+  string name = 1;
+}
+
+service DoorService {
+  rpc GetDoor(GetDoorRequest) returns (Door) {}
+}

@@ -166,6 +166,15 @@ func WithIncludeNumberEnumValues(includeNumberEnumValues bool) Option {
 	}
 }
 
+// WithEnumValueDescriptions documents each enum value with its own comment, as an
+// x-enum-descriptions list beside the enum's values and as a list in the enum's description.
+func WithEnumValueDescriptions(withEnumValueDescriptions bool) Option {
+	return func(g *generator) error {
+		g.options.WithEnumValueDescriptions = withEnumValueDescriptions
+		return nil
+	}
+}
+
 // WithIgnoreGoogleapiHTTP tells the generator to ignore google.api.http options.
 func WithIgnoreGoogleapiHTTP(ignoreGoogleapiHTTP bool) Option {
 	return func(g *generator) error {
